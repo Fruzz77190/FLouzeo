@@ -1,4 +1,4 @@
-const CACHE = "flouzeo-v1";
+const CACHE = "flouzeo-v2";
 const ASSETS = [
   "./",
   "./index.html",

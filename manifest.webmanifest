@@ -1,6 +1,6 @@
 {
-  "name": "FLouzeo",
-  "short_name": "FLouzeo",
+  "name": "Flouzeo",
+  "short_name": "Flouzeo",
   "description": "Notez vos dépenses courantes et suivez le total du mois",
   "start_url": "./index.html",
   "display": "standalone",
