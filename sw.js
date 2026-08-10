@@ -1,13 +1,13 @@
-const CACHE = "flouzeo-v2";
+const CACHE = "flouzeo-v3";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
   "./manifest.webmanifest",
-  "./icons/icon.svg",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
+  "./icons/piggy.svg",
+  "./icons/piggy-192.png",
+  "./icons/piggy-512.png",
 ];
 
 self.addEventListener("install", (event) => {

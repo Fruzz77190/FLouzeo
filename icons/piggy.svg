@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Flouzeo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9ecceb"/>
+      <stop offset="100%" stop-color="#3a7eb8"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <ellipse cx="145" cy="185" rx="34" ry="40" fill="#f4fbff"/>
+  <ellipse cx="367" cy="185" rx="34" ry="40" fill="#f4fbff"/>
+  <ellipse cx="145" cy="190" rx="16" ry="20" fill="#ffd6e0"/>
+  <ellipse cx="367" cy="190" rx="16" ry="20" fill="#ffd6e0"/>
+  <ellipse cx="256" cy="285" rx="155" ry="125" fill="#f4fbff"/>
+  <rect x="210" y="185" width="92" height="17" rx="8" fill="#1f4f78"/>
+  <circle cx="205" cy="245" r="14" fill="#1f4f78"/>
+  <circle cx="307" cy="245" r="14" fill="#1f4f78"/>
+  <circle cx="209" cy="241" r="5" fill="#f4fbff"/>
+  <circle cx="311" cy="241" r="5" fill="#f4fbff"/>
+  <ellipse cx="256" cy="318" rx="55" ry="42" fill="#badcf0"/>
+  <ellipse cx="236" cy="318" rx="9" ry="12" fill="#1f4f78"/>
+  <ellipse cx="276" cy="318" rx="9" ry="12" fill="#1f4f78"/>
+  <rect x="168" y="380" width="42" height="50" rx="14" fill="#f4fbff"/>
+  <rect x="302" y="380" width="42" height="50" rx="14" fill="#f4fbff"/>
+  <path d="M400 295c30-10 45-35 30-60" fill="none" stroke="#f4fbff" stroke-width="18" stroke-linecap="round"/>
+</svg>

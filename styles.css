@@ -64,12 +64,12 @@ input {
 }
 
 .brand-mark {
-  width: 1.55rem;
-  height: 1.55rem;
-  border-radius: 0.55rem;
-  background:
-    linear-gradient(145deg, var(--sky-300), var(--sky-600));
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.45rem;
+  display: block;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(31, 79, 120, 0.18);
 }
 
 .brand h1 {
