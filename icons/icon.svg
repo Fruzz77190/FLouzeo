@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="FLouzeo">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9ecceb"/>
+      <stop offset="100%" stop-color="#3a7eb8"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#g)"/>
+  <circle cx="256" cy="250" r="118" fill="#f3f8fc" opacity="0.95"/>
+  <path d="M256 150c-55 0-100 45-100 100 0 72 100 140 100 140s100-68 100-140c0-55-45-100-100-100zm0 138a38 38 0 1 1 0-76 38 38 0 0 1 0 76z" fill="#1f4f78"/>
+  <text x="256" y="430" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="72" font-weight="700" fill="#f3f8fc">�</text>
+</svg>
