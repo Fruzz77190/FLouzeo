@@ -1,10 +1,10 @@
-const CACHE = "flouzeo-v3";
+const CACHE = "flouzeo-v4";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
-  "./manifest.webmanifest",
+  "./flouzeo.webmanifest",
   "./icons/piggy.svg",
   "./icons/piggy-192.png",
   "./icons/piggy-512.png",
