@@ -1,6 +1,6 @@
 const STORAGE_KEY = "flouzeo-v1";
 
-const VARIABLE_CATEGORIES = [
+const VARIABLE_DEFAULTS = [
   { id: "courses", label: "Courses alimentaires" },
   { id: "sante", label: "Santé" },
   { id: "voiture", label: "Voiture" },
@@ -10,7 +10,7 @@ const VARIABLE_CATEGORIES = [
   { id: "dons", label: "Dons" },
 ];
 
-const FIXED_CATEGORIES = [
+const FIXED_DEFAULTS = [
   { id: "loyer", label: "Loyer + charges" },
   { id: "assurance_banques", label: "Assurance et Banques" },
   { id: "abonnements", label: "Abonnements" },
@@ -47,15 +47,44 @@ function uid() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function emptyFixed() {
-  return Object.fromEntries(FIXED_CATEGORIES.map((c) => [c.id, 0]));
+function slugify(label) {
+  const base = label
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "")
+    .slice(0, 40);
+  return base || `cat_${uid()}`;
+}
+
+function uniqueCategoryId(label, existing) {
+  let id = slugify(label);
+  if (!existing.some((c) => c.id === id)) return id;
+  id = `${id}_${uid()}`;
+  return id;
+}
+
+function emptyFixedFrom(categories) {
+  return Object.fromEntries(categories.map((c) => [c.id, 0]));
 }
 
 function defaultState() {
   return {
-    fixedTemplates: emptyFixed(),
+    variableCategories: VARIABLE_DEFAULTS.map((c) => ({ ...c })),
+    fixedCategories: FIXED_DEFAULTS.map((c) => ({ ...c })),
+    fixedTemplates: emptyFixedFrom(FIXED_DEFAULTS),
     months: {},
   };
+}
+
+function normalizeCategories(list, fallback) {
+  if (!Array.isArray(list) || !list.length) {
+    return fallback.map((c) => ({ ...c }));
+  }
+  return list
+    .filter((c) => c && typeof c.id === "string" && typeof c.label === "string")
+    .map((c) => ({ id: c.id, label: c.label.trim() || c.id }));
 }
 
 function loadState() {
@@ -63,8 +92,21 @@ function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState();
     const data = JSON.parse(raw);
+    const variableCategories = normalizeCategories(
+      data.variableCategories,
+      VARIABLE_DEFAULTS
+    );
+    const fixedCategories = normalizeCategories(
+      data.fixedCategories,
+      FIXED_DEFAULTS
+    );
     return {
-      fixedTemplates: { ...emptyFixed(), ...(data.fixedTemplates || {}) },
+      variableCategories,
+      fixedCategories,
+      fixedTemplates: {
+        ...emptyFixedFrom(fixedCategories),
+        ...(data.fixedTemplates || {}),
+      },
       months: data.months || {},
     };
   } catch {
@@ -82,6 +124,14 @@ function ensureMonth(state, key) {
       fixed: { ...state.fixedTemplates },
       expenses: [],
     };
+  } else {
+    for (const cat of state.fixedCategories) {
+      if (state.months[key].fixed[cat.id] === undefined) {
+        state.months[key].fixed[cat.id] = Number(
+          state.fixedTemplates[cat.id] || 0
+        );
+      }
+    }
   }
   return state.months[key];
 }
@@ -96,7 +146,7 @@ function categoryTotal(month, categoryId, kind) {
 }
 
 function monthTotal(month) {
-  const fixedSum = FIXED_CATEGORIES.reduce(
+  const fixedSum = state.fixedCategories.reduce(
     (sum, c) => sum + Number(month.fixed[c.id] || 0),
     0
   );
@@ -115,73 +165,108 @@ function parseAmount(value) {
   return Math.round(n * 100) / 100;
 }
 
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
 /** @type {ReturnType<typeof defaultState>} */
 let state = loadState();
 let currentMonth = monthKey();
 /** @type {{ kind: 'variable' | 'fixed', id: string, label: string } | null} */
 let activeCategory = null;
+/** @type {'expense' | 'add-category' | null} */
+let sheetMode = null;
+/** @type {'variable' | 'fixed' | null} */
+let addCategoryKind = null;
 
 const els = {
   monthLabel: document.getElementById("month-label"),
   monthTotal: document.getElementById("month-total"),
   variableList: document.getElementById("variable-list"),
   fixedList: document.getElementById("fixed-list"),
+  addVariable: document.getElementById("add-variable"),
+  addFixed: document.getElementById("add-fixed"),
   prevMonth: document.getElementById("prev-month"),
   nextMonth: document.getElementById("next-month"),
   sheet: document.getElementById("sheet"),
   backdrop: document.getElementById("sheet-backdrop"),
   sheetTitle: document.getElementById("sheet-title"),
   sheetSub: document.getElementById("sheet-sub"),
+  amountField: document.getElementById("amount-field"),
   amountInput: document.getElementById("amount-input"),
-  noteInput: document.getElementById("note-input"),
   noteField: document.getElementById("note-field"),
+  noteInput: document.getElementById("note-input"),
+  categoryNameField: document.getElementById("category-name-field"),
+  categoryNameInput: document.getElementById("category-name-input"),
   sheetCancel: document.getElementById("sheet-cancel"),
   sheetSave: document.getElementById("sheet-save"),
+  sheetDeleteCategory: document.getElementById("sheet-delete-category"),
   entries: document.getElementById("entries"),
   entriesList: document.getElementById("entries-list"),
 };
+
+function categoriesFor(kind) {
+  return kind === "fixed" ? state.fixedCategories : state.variableCategories;
+}
 
 function render() {
   const month = ensureMonth(state, currentMonth);
   els.monthLabel.textContent = monthTitle.format(parseMonthKey(currentMonth));
   els.monthTotal.textContent = euro.format(monthTotal(month));
 
-  els.variableList.innerHTML = VARIABLE_CATEGORIES.map((cat) => {
-    const total = categoryTotal(month, cat.id, "variable");
-    return `
+  els.variableList.innerHTML = state.variableCategories
+    .map((cat) => {
+      const total = categoryTotal(month, cat.id, "variable");
+      return `
       <li>
         <button type="button" class="cat-btn" data-kind="variable" data-id="${cat.id}">
-          <span class="cat-name">${cat.label}</span>
+          <span class="cat-name">${escapeHtml(cat.label)}</span>
           <span class="cat-amount">${euro.format(total)}</span>
         </button>
       </li>
     `;
-  }).join("");
+    })
+    .join("");
 
-  els.fixedList.innerHTML = FIXED_CATEGORIES.map((cat) => {
-    const total = categoryTotal(month, cat.id, "fixed");
-    return `
+  els.fixedList.innerHTML = state.fixedCategories
+    .map((cat) => {
+      const total = categoryTotal(month, cat.id, "fixed");
+      return `
       <li>
         <button type="button" class="cat-btn" data-kind="fixed" data-id="${cat.id}">
-          <span class="cat-name">${cat.label}</span>
+          <span class="cat-name">${escapeHtml(cat.label)}</span>
           <span class="cat-amount">${euro.format(total)}</span>
         </button>
       </li>
     `;
-  }).join("");
+    })
+    .join("");
+}
+
+function setExpenseFieldsVisible(visible) {
+  els.amountField.hidden = !visible;
+  els.noteField.hidden = !visible;
+  els.categoryNameField.hidden = visible;
 }
 
 function openSheet(kind, id) {
-  const list = kind === "fixed" ? FIXED_CATEGORIES : VARIABLE_CATEGORIES;
-  const cat = list.find((c) => c.id === id);
+  const cat = categoriesFor(kind).find((c) => c.id === id);
   if (!cat) return;
 
+  sheetMode = "expense";
+  addCategoryKind = null;
   activeCategory = { kind, id, label: cat.label };
   const month = ensureMonth(state, currentMonth);
 
   els.sheetTitle.textContent = cat.label;
+  setExpenseFieldsVisible(true);
   els.noteField.hidden = kind === "fixed";
   els.noteInput.value = "";
+  els.sheetDeleteCategory.hidden = false;
 
   if (kind === "fixed") {
     els.sheetSub.textContent =
@@ -201,6 +286,26 @@ function openSheet(kind, id) {
   els.sheet.hidden = false;
   els.backdrop.hidden = false;
   requestAnimationFrame(() => els.amountInput.focus());
+}
+
+function openAddCategorySheet(kind) {
+  sheetMode = "add-category";
+  addCategoryKind = kind;
+  activeCategory = null;
+
+  els.sheetTitle.textContent =
+    kind === "fixed" ? "Nouvelle charge fixe" : "Nouvelle charge variable";
+  els.sheetSub.textContent = "Choisissez le nom de la sous-catégorie.";
+  setExpenseFieldsVisible(false);
+  els.categoryNameInput.value = "";
+  els.sheetSave.textContent = "Créer";
+  els.sheetDeleteCategory.hidden = true;
+  els.entries.hidden = true;
+  els.entriesList.innerHTML = "";
+
+  els.sheet.hidden = false;
+  els.backdrop.hidden = false;
+  requestAnimationFrame(() => els.categoryNameInput.focus());
 }
 
 function renderEntries(month, categoryId) {
@@ -240,21 +345,72 @@ function renderEntries(month, categoryId) {
     .join("");
 }
 
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
-
 function closeSheet() {
   activeCategory = null;
+  sheetMode = null;
+  addCategoryKind = null;
   els.sheet.hidden = true;
   els.backdrop.hidden = true;
 }
 
+function addCategory(kind, label) {
+  const name = label.trim();
+  if (!name) return false;
+
+  const list = categoriesFor(kind);
+  const exists = list.some(
+    (c) => c.label.toLocaleLowerCase("fr") === name.toLocaleLowerCase("fr")
+  );
+  if (exists) {
+    els.categoryNameInput.focus();
+    els.categoryNameInput.select();
+    return false;
+  }
+
+  const id = uniqueCategoryId(name, [
+    ...state.variableCategories,
+    ...state.fixedCategories,
+  ]);
+  list.push({ id, label: name });
+
+  if (kind === "fixed") {
+    state.fixedTemplates[id] = 0;
+    for (const month of Object.values(state.months)) {
+      month.fixed[id] = 0;
+    }
+  }
+
+  saveState(state);
+  return true;
+}
+
+function deleteCategory(kind, id) {
+  if (kind === "fixed") {
+    state.fixedCategories = state.fixedCategories.filter((c) => c.id !== id);
+    delete state.fixedTemplates[id];
+    for (const month of Object.values(state.months)) {
+      delete month.fixed[id];
+    }
+  } else {
+    state.variableCategories = state.variableCategories.filter(
+      (c) => c.id !== id
+    );
+    for (const month of Object.values(state.months)) {
+      month.expenses = month.expenses.filter((e) => e.categoryId !== id);
+    }
+  }
+  saveState(state);
+}
+
 function saveFromSheet() {
+  if (sheetMode === "add-category") {
+    if (!addCategoryKind) return;
+    if (!addCategory(addCategoryKind, els.categoryNameInput.value)) return;
+    closeSheet();
+    render();
+    return;
+  }
+
   if (!activeCategory) return;
   const amount = parseAmount(els.amountInput.value);
   if (amount === null) {
@@ -268,7 +424,6 @@ function saveFromSheet() {
   if (activeCategory.kind === "fixed") {
     month.fixed[activeCategory.id] = amount;
     state.fixedTemplates[activeCategory.id] = amount;
-    // Aligne aussi les mois futurs déjà initialisés
     for (const key of Object.keys(state.months)) {
       if (key > currentMonth) {
         state.months[key].fixed[activeCategory.id] = amount;
@@ -303,6 +458,17 @@ function deleteExpense(expenseId) {
   render();
 }
 
+function confirmDeleteCategory() {
+  if (!activeCategory) return;
+  const ok = window.confirm(
+    `Supprimer la sous-catégorie « ${activeCategory.label} » ?\nLes montants associés seront aussi supprimés.`
+  );
+  if (!ok) return;
+  deleteCategory(activeCategory.kind, activeCategory.id);
+  closeSheet();
+  render();
+}
+
 els.variableList.addEventListener("click", (ev) => {
   const btn = ev.target.closest(".cat-btn");
   if (!btn) return;
@@ -314,6 +480,9 @@ els.fixedList.addEventListener("click", (ev) => {
   if (!btn) return;
   openSheet(btn.dataset.kind, btn.dataset.id);
 });
+
+els.addVariable.addEventListener("click", () => openAddCategorySheet("variable"));
+els.addFixed.addEventListener("click", () => openAddCategorySheet("fixed"));
 
 els.prevMonth.addEventListener("click", () => {
   currentMonth = shiftMonth(currentMonth, -1);
@@ -334,8 +503,16 @@ els.nextMonth.addEventListener("click", () => {
 els.sheetCancel.addEventListener("click", closeSheet);
 els.backdrop.addEventListener("click", closeSheet);
 els.sheetSave.addEventListener("click", saveFromSheet);
+els.sheetDeleteCategory.addEventListener("click", confirmDeleteCategory);
 
 els.amountInput.addEventListener("keydown", (ev) => {
+  if (ev.key === "Enter") {
+    ev.preventDefault();
+    saveFromSheet();
+  }
+});
+
+els.categoryNameInput.addEventListener("keydown", (ev) => {
   if (ev.key === "Enter") {
     ev.preventDefault();
     saveFromSheet();

@@ -10,9 +10,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="description" content="Flouzeo — notez vos dépenses au quotidien" />
-    <link rel="manifest" href="flouzeo.webmanifest?v=4" />
-    <link rel="icon" href="icons/piggy.svg?v=4" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="icons/piggy-192.png?v=4" />
+    <link rel="manifest" href="flouzeo.webmanifest?v=5" />
+    <link rel="icon" href="icons/piggy.svg?v=5" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/piggy-192.png?v=5" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -26,7 +26,7 @@
     <div class="app">
       <header class="top">
         <div class="brand">
-          <img class="brand-mark" src="icons/piggy-192.png?v=4" width="28" height="28" alt="" />
+          <img class="brand-mark" src="icons/piggy-192.png?v=5" width="28" height="28" alt="" />
           <h1>Flouzeo</h1>
         </div>
         <div class="month-nav" role="group" aria-label="Mois">
@@ -50,12 +50,18 @@
           <h2 id="var-title">Charges variables</h2>
           <p class="hint">Touchez une catégorie pour ajouter une dépense</p>
           <ul class="cat-list" id="variable-list"></ul>
+          <button type="button" class="add-cat-btn" id="add-variable">
+            + Ajouter une sous-catégorie
+          </button>
         </section>
 
         <section class="block block-fixed" aria-labelledby="fix-title">
           <h2 id="fix-title">Charges fixes</h2>
           <p class="hint">Montants reportés chaque mois — modifiables</p>
           <ul class="cat-list" id="fixed-list"></ul>
+          <button type="button" class="add-cat-btn" id="add-fixed">
+            + Ajouter une sous-catégorie
+          </button>
         </section>
       </main>
     </div>
@@ -73,7 +79,18 @@
       <h3 id="sheet-title"></h3>
       <p class="sheet-sub" id="sheet-sub"></p>
 
-      <label class="field">
+      <label class="field" id="category-name-field" hidden>
+        <span>Nom de la sous-catégorie</span>
+        <input
+          id="category-name-input"
+          type="text"
+          maxlength="60"
+          placeholder="Ex. Animaux"
+          autocomplete="off"
+        />
+      </label>
+
+      <label class="field" id="amount-field">
         <span>Montant (€)</span>
         <input
           id="amount-input"
@@ -95,6 +112,10 @@
         <button type="button" class="btn btn-ghost" id="sheet-cancel">Annuler</button>
         <button type="button" class="btn btn-primary" id="sheet-save">Enregistrer</button>
       </div>
+
+      <button type="button" class="btn btn-danger" id="sheet-delete-category" hidden>
+        Supprimer cette sous-catégorie
+      </button>
 
       <div class="entries" id="entries" hidden>
         <h4>Ce mois</h4>

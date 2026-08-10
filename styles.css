@@ -200,6 +200,34 @@ input {
   background: rgba(255, 255, 255, 0.55);
 }
 
+.add-cat-btn {
+  width: 100%;
+  margin-top: 0.55rem;
+  padding: 0.8rem 1rem;
+  border: 1px dashed rgba(126, 184, 232, 0.55);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--sky-600);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.add-cat-btn:active {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.btn-danger {
+  width: 100%;
+  margin-top: 0.75rem;
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid rgba(196, 92, 92, 0.35);
+}
+
+.btn-danger:active {
+  background: rgba(196, 92, 92, 0.08);
+}
+
 .sheet-backdrop {
   position: fixed;
   inset: 0;
