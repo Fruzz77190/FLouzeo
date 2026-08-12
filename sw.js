@@ -1,4 +1,4 @@
-const CACHE = "flouzeo-v5";
+const CACHE = "flouzeo-v6";
 const ASSETS = [
   "./",
   "./index.html",
@@ -12,15 +12,30 @@ const ASSETS = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    (async () => {
+      const cache = await caches.open(CACHE);
+      await Promise.all(
+        ASSETS.map(async (url) => {
+          try {
+            await cache.add(url);
+          } catch {
+            /* ignore individual cache failures */
+          }
+        })
+      );
+      await self.skipWaiting();
+    })()
   );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+      )
+      .then(() => self.clients.claim())
   );
 });
 
@@ -29,15 +44,22 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
 
   event.respondWith(
-    caches.match(req).then((cached) => {
-      const fetched = fetch(req)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(req, copy));
-          return response;
-        })
-        .catch(() => cached);
-      return cached || fetched;
-    })
+    (async () => {
+      const cached = await caches.match(req);
+      try {
+        const response = await fetch(req);
+        if (response && response.ok && req.url.startsWith(self.location.origin)) {
+          const cache = await caches.open(CACHE);
+          cache.put(req, response.clone());
+        }
+        return response;
+      } catch {
+        if (cached) return cached;
+        if (req.mode === "navigate") {
+          return caches.match("./index.html");
+        }
+        throw new Error("offline");
+      }
+    })()
   );
 });

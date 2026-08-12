@@ -10,9 +10,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="description" content="Flouzeo — notez vos dépenses au quotidien" />
-    <link rel="manifest" href="flouzeo.webmanifest?v=5" />
-    <link rel="icon" href="icons/piggy.svg?v=5" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="icons/piggy-192.png?v=5" />
+    <link rel="manifest" href="flouzeo.webmanifest?v=6" />
+    <link rel="icon" href="icons/piggy.svg?v=6" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/piggy-192.png?v=6" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -26,7 +26,7 @@
     <div class="app">
       <header class="top">
         <div class="brand">
-          <img class="brand-mark" src="icons/piggy-192.png?v=5" width="28" height="28" alt="" />
+          <img class="brand-mark" src="icons/piggy-192.png?v=6" width="28" height="28" alt="" />
           <h1>Flouzeo</h1>
         </div>
         <div class="month-nav" role="group" aria-label="Mois">
@@ -43,6 +43,21 @@
       <section class="total-panel" aria-live="polite">
         <p class="total-label">Total du mois</p>
         <p class="total-value" id="month-total">0,00 €</p>
+      </section>
+
+      <section class="install-card" id="install-card" hidden>
+        <p class="install-title">Installer Flouzeo sur l’écran d’accueil</p>
+        <p class="install-text" id="install-text">
+          Sur Chrome Android : menu <strong>⋮</strong> → <strong>Partager</strong> →
+          <strong>Ajouter à l’écran d’accueil</strong>. Vérifie aussi que
+          <em>Version ordinateur</em> est décochée.
+        </p>
+        <div class="install-actions">
+          <button type="button" class="btn btn-primary" id="install-btn" hidden>
+            Installer
+          </button>
+          <button type="button" class="btn btn-ghost" id="install-dismiss">OK</button>
+        </div>
       </section>
 
       <main class="content">

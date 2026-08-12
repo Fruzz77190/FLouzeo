@@ -529,6 +529,57 @@ ensureMonth(state, currentMonth);
 saveState(state);
 render();
 
+const INSTALL_DISMISS_KEY = "flouzeo-install-dismissed";
+let deferredInstallPrompt = null;
+
+function isStandalone() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true
+  );
+}
+
+function showInstallHelp() {
+  if (isStandalone()) return;
+  if (localStorage.getItem(INSTALL_DISMISS_KEY) === "1") return;
+  const card = document.getElementById("install-card");
+  if (card) card.hidden = false;
+}
+
+function hideInstallHelp() {
+  const card = document.getElementById("install-card");
+  if (card) card.hidden = true;
+}
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  const btn = document.getElementById("install-btn");
+  if (btn) btn.hidden = false;
+  showInstallHelp();
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  localStorage.setItem(INSTALL_DISMISS_KEY, "1");
+  hideInstallHelp();
+});
+
+document.getElementById("install-btn")?.addEventListener("click", async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  hideInstallHelp();
+});
+
+document.getElementById("install-dismiss")?.addEventListener("click", () => {
+  localStorage.setItem(INSTALL_DISMISS_KEY, "1");
+  hideInstallHelp();
+});
+
+showInstallHelp();
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js").catch(() => {
