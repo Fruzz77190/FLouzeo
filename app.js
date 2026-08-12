@@ -529,8 +529,16 @@ ensureMonth(state, currentMonth);
 saveState(state);
 render();
 
-const INSTALL_DISMISS_KEY = "flouzeo-install-dismissed";
 let deferredInstallPrompt = null;
+
+const installEls = {
+  header: document.getElementById("header-install"),
+  banner: document.getElementById("install-banner"),
+  bannerBtn: document.getElementById("install-banner-btn"),
+  sheet: document.getElementById("install-sheet"),
+  sheetClose: document.getElementById("install-sheet-close"),
+  sheetAction: document.getElementById("install-sheet-action"),
+};
 
 function isStandalone() {
   return (
@@ -539,46 +547,63 @@ function isStandalone() {
   );
 }
 
-function showInstallHelp() {
-  if (isStandalone()) return;
-  if (localStorage.getItem(INSTALL_DISMISS_KEY) === "1") return;
-  const card = document.getElementById("install-card");
-  if (card) card.hidden = false;
+function showBrowserInstallUi() {
+  if (isStandalone()) {
+    if (installEls.header) installEls.header.hidden = true;
+    if (installEls.banner) installEls.banner.hidden = true;
+    return;
+  }
+  if (installEls.header) installEls.header.hidden = false;
+  if (installEls.banner) installEls.banner.hidden = false;
 }
 
-function hideInstallHelp() {
-  const card = document.getElementById("install-card");
-  if (card) card.hidden = true;
+function openInstallSheet() {
+  if (!installEls.sheet) return;
+  installEls.sheet.hidden = false;
+  els.backdrop.hidden = false;
+}
+
+function closeInstallSheet() {
+  if (installEls.sheet) installEls.sheet.hidden = true;
+  if (els.sheet.hidden) els.backdrop.hidden = true;
+}
+
+async function triggerInstall() {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    const result = await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    if (result?.outcome === "accepted") {
+      showBrowserInstallUi();
+      closeInstallSheet();
+    }
+    return;
+  }
+  openInstallSheet();
 }
 
 window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
   deferredInstallPrompt = event;
-  const btn = document.getElementById("install-btn");
-  if (btn) btn.hidden = false;
-  showInstallHelp();
+  showBrowserInstallUi();
 });
 
 window.addEventListener("appinstalled", () => {
   deferredInstallPrompt = null;
-  localStorage.setItem(INSTALL_DISMISS_KEY, "1");
-  hideInstallHelp();
+  showBrowserInstallUi();
+  closeInstallSheet();
 });
 
-document.getElementById("install-btn")?.addEventListener("click", async () => {
-  if (!deferredInstallPrompt) return;
-  deferredInstallPrompt.prompt();
-  await deferredInstallPrompt.userChoice;
-  deferredInstallPrompt = null;
-  hideInstallHelp();
+installEls.header?.addEventListener("click", triggerInstall);
+installEls.bannerBtn?.addEventListener("click", triggerInstall);
+installEls.sheetAction?.addEventListener("click", triggerInstall);
+installEls.sheetClose?.addEventListener("click", closeInstallSheet);
+
+els.backdrop.addEventListener("click", () => {
+  closeInstallSheet();
 });
 
-document.getElementById("install-dismiss")?.addEventListener("click", () => {
-  localStorage.setItem(INSTALL_DISMISS_KEY, "1");
-  hideInstallHelp();
-});
-
-showInstallHelp();
+showBrowserInstallUi();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

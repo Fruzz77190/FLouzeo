@@ -10,9 +10,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="description" content="Flouzeo — notez vos dépenses au quotidien" />
-    <link rel="manifest" href="flouzeo.webmanifest?v=6" />
-    <link rel="icon" href="icons/piggy.svg?v=6" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="icons/piggy-192.png?v=6" />
+    <link rel="manifest" href="flouzeo.webmanifest?v=7" />
+    <link rel="icon" href="icons/piggy.svg?v=7" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/piggy-192.png?v=7" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -26,17 +26,29 @@
     <div class="app">
       <header class="top">
         <div class="brand">
-          <img class="brand-mark" src="icons/piggy-192.png?v=6" width="28" height="28" alt="" />
+          <img class="brand-mark" src="icons/piggy-192.png?v=7" width="28" height="28" alt="" />
           <h1>Flouzeo</h1>
         </div>
-        <div class="month-nav" role="group" aria-label="Mois">
-          <button type="button" class="icon-btn" id="prev-month" aria-label="Mois précédent">
-            ‹
+        <div class="header-actions">
+          <button
+            type="button"
+            class="install-chip"
+            id="header-install"
+            aria-label="Installer Flouzeo"
+            hidden
+          >
+            <span class="install-chip-icon" aria-hidden="true">↓</span>
+            Installer
           </button>
-          <p class="month-label" id="month-label"></p>
-          <button type="button" class="icon-btn" id="next-month" aria-label="Mois suivant">
-            ›
-          </button>
+          <div class="month-nav" role="group" aria-label="Mois">
+            <button type="button" class="icon-btn" id="prev-month" aria-label="Mois précédent">
+              ‹
+            </button>
+            <p class="month-label" id="month-label"></p>
+            <button type="button" class="icon-btn" id="next-month" aria-label="Mois suivant">
+              ›
+            </button>
+          </div>
         </div>
       </header>
 
@@ -45,19 +57,14 @@
         <p class="total-value" id="month-total">0,00 €</p>
       </section>
 
-      <section class="install-card" id="install-card" hidden>
-        <p class="install-title">Installer Flouzeo sur l’écran d’accueil</p>
-        <p class="install-text" id="install-text">
-          Sur Chrome Android : menu <strong>⋮</strong> → <strong>Partager</strong> →
-          <strong>Ajouter à l’écran d’accueil</strong>. Vérifie aussi que
-          <em>Version ordinateur</em> est décochée.
-        </p>
-        <div class="install-actions">
-          <button type="button" class="btn btn-primary" id="install-btn" hidden>
-            Installer
-          </button>
-          <button type="button" class="btn btn-ghost" id="install-dismiss">OK</button>
-        </div>
+      <section class="install-banner" id="install-banner" hidden>
+        <button type="button" class="install-banner-btn" id="install-banner-btn">
+          <span class="install-banner-icon" aria-hidden="true">⬇</span>
+          <span class="install-banner-copy">
+            <strong>Installer Flouzeo</strong>
+            <small>Ajouter l’icône sur l’écran d’accueil</small>
+          </span>
+        </button>
       </section>
 
       <main class="content">
@@ -135,6 +142,28 @@
       <div class="entries" id="entries" hidden>
         <h4>Ce mois</h4>
         <ul id="entries-list"></ul>
+      </div>
+    </div>
+
+    <div
+      class="sheet"
+      id="install-sheet"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="install-sheet-title"
+      hidden
+    >
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <h3 id="install-sheet-title">Installer Flouzeo</h3>
+      <p class="sheet-sub">Ajoute l’appli sur l’écran d’accueil de ton téléphone.</p>
+      <ol class="install-steps">
+        <li>Vérifie que <strong>Version ordinateur</strong> est décochée dans le menu ⋮</li>
+        <li>Touche le bouton <strong>Installer Flouzeo</strong> ci-dessous</li>
+        <li>Si Chrome ne propose rien : menu <strong>⋮</strong> → icône <strong>Partager</strong> → <strong>Ajouter à l’écran d’accueil</strong></li>
+      </ol>
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-ghost" id="install-sheet-close">Fermer</button>
+        <button type="button" class="btn btn-primary" id="install-sheet-action">Installer</button>
       </div>
     </div>
 
